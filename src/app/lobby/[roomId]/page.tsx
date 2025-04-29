@@ -2,16 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ref, onValue, set } from "firebase/database";
+import { ref, onValue, update } from "firebase/database";
 import { db } from "@/lib/firebase";
 
 export default function LobbyPage() {
-  const { roomId } = useParams(); // Use dynamic routing parameter
+  const { roomId } = useParams();
   const [name, setName] = useState("");
-  const [hostName, setHostName] = useState("");  // Store the host name
-  const [joineeName, setJoineeName] = useState("");  // Store the joinee name
+  const [hostName, setHostName] = useState("");
+  const [joineeName, setJoineeName] = useState("");
   const [isHost, setIsHost] = useState(false);
-  const [gameStarted, setGameStarted] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -20,58 +19,70 @@ export default function LobbyPage() {
       setName(storedName);
     }
 
-    // Ensure roomId is a string (handle case when it might be string[])
     if (roomId) {
-      const roomIdString = Array.isArray(roomId) ? roomId[0] : roomId; // If roomId is an array, use the first element
-      fetchRoomData(roomIdString); // Fetch room data with the correct roomId
+      const roomIdString = Array.isArray(roomId) ? roomId[0] : roomId;
+      fetchRoomData(roomIdString);
     }
   }, [roomId]);
 
   const fetchRoomData = (roomId: string) => {
     const roomRef = ref(db, `rooms/${roomId}`);
     onValue(roomRef, (snapshot) => {
-      const roomData = snapshot.val();
-      console.log(roomData)
-      if (roomData) {
-        // Set the host and joinee data
-        setHostName(roomData.host.name);
-        setJoineeName(roomData.joinee ? roomData.joinee.name : "Waiting for joinee...");
+      const data = snapshot.val();
+      if (data) {
+        setHostName(data.host?.name || "Host");
+        setJoineeName(data.joinee?.name || "Waiting for Joinee...");
 
-        // Check if current player's id matches the host
-        const storedId = localStorage.getItem("playerId")
-        
-        setIsHost(roomData.host.userId === storedId);
-        setGameStarted(roomData.started || false);
+        const storedId = localStorage.getItem("playerId");
+        const isCurrentHost = data.host?.userId === storedId;
+        setIsHost(isCurrentHost);
 
-        // Redirect if the game has already started
-        if (roomData.started) {
-          router.push(`/game/${roomId}`); // Redirect to game page
-        }
+        const currentUser = isCurrentHost ? data.host : data.joinee;
+        const phase = currentUser?.phase || "lobby";
+
+        // 🚀 Redirect based on current user's phase
+        if (phase === "questions") {
+          router.push(`/game/${roomId}`);
+        } 
+        // else stay on lobby
       }
     });
   };
 
   const handleStartGame = () => {
-    if (roomId) {
-      const roomRef = ref(db, `rooms/${roomId}/started`);
-      set(roomRef, true); // Mark the game as started in Firebase
-      router.push(`/game/${roomId}`); // Redirect to game page
-    }
+    if (!roomId) return;
+
+    const roomIdString = Array.isArray(roomId) ? roomId[0] : roomId;
+
+    // Update both host and joinee phase to "questions"
+    const updates: any = {};
+    updates[`rooms/${roomIdString}/host/phase`] = "questions";
+    updates[`rooms/${roomIdString}/joinee/phase`] = "questions";
+
+    update(ref(db), updates)
+      .then(() => {
+        router.push(`/game/${roomIdString}`);
+      })
+      .catch((error) => {
+        console.error("Failed to start game:", error);
+      });
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
       <h1 className="text-4xl font-bold mb-4">Lobby - Room {roomId}</h1>
-      <p className="text-xl mb-4">Host: {hostName}</p>
-      <p className="text-xl mb-4">Joinee: {joineeName}</p>
+      <p className="text-xl mb-2">Host: {hostName}</p>
+      <p className="text-xl mb-2">Joinee: {joineeName}</p>
 
-      <button
-        onClick={handleStartGame}
-        className="mt-4 px-6 py-2 bg-blue-500 text-white rounded-lg"
-        hidden={gameStarted || !isHost}  // Disable button if game has started or if not the host
-      >
-        {gameStarted ? "Game Started" : "Start Game"}
-      </button>
+      {isHost && (
+        <button
+          onClick={handleStartGame}
+          className="mt-6 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all"
+          disabled={joineeName === "Waiting for Joinee..."}
+        >
+          {joineeName === "Waiting for Joinee..." ? "Waiting for Joinee..." : "Start Game"}
+        </button>
+      )}
     </div>
   );
 }

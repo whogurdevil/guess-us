@@ -10,7 +10,7 @@ function generateRoomCode() {
 }
 
 function generateUserId() {
-  return `user_${Math.random().toString(36).substring(2, 9)}`;  // Generates a unique ID
+  return `user_${Math.random().toString(36).substring(2, 9)}`;
 }
 
 export default function HomePage() {
@@ -20,19 +20,15 @@ export default function HomePage() {
   const [joinRoom, setJoinRoom] = useState(false);
   const router = useRouter();
 
-  // On component mount, try to load the name and userId from localStorage if available
   useEffect(() => {
     const storedName = localStorage.getItem("playerName");
     const storedUserId = localStorage.getItem("playerId");
-    
-    if (storedName) {
-      setName(storedName);
-    }
+
+    if (storedName) setName(storedName);
 
     if (storedUserId) {
       setUserId(storedUserId);
     } else {
-      // If there's no userId in localStorage, generate and store a new one
       const newUserId = generateUserId();
       setUserId(newUserId);
       localStorage.setItem("playerId", newUserId);
@@ -45,51 +41,47 @@ export default function HomePage() {
       return;
     }
 
-    // Store the name and userId in localStorage for future use
     localStorage.setItem("playerName", name);
 
     const newRoomId = generateRoomCode();
 
-    // Save room data in Firebase Realtime Database
     await set(ref(db, `rooms/${newRoomId}`), {
       host: {
         name: name,
-        userId: userId,  // Use the generated userId as hostId
+        userId: userId,
         isCompleted: false,
+        phase: "lobby",   // <- add phase field
         answers: [],
-      },
-      started: false,
+      }
     });
 
-    router.push(`/lobby/${newRoomId}?name=${encodeURIComponent(name)}&userId=${encodeURIComponent(userId)}`);
+    router.push(`/lobby/${newRoomId}`);
   };
 
   const handleJoinRoom = async () => {
-    if (!roomId || !name || !userId) {
-      alert("Please enter your name, room ID, and ensure your user ID is set.");
+    if (!roomId || !name) {
+      alert("Please enter your name and room ID.");
       return;
     }
 
-    // Store the name and userId in localStorage for future use
     localStorage.setItem("playerName", name);
     localStorage.setItem("playerId", userId);
 
-    // Update Firebase to add the joinee data in the room
     const roomRef = ref(db, `rooms/${roomId}`);
-
-    // Check if the room exists, and if so, join the room
     const roomSnapshot = await get(roomRef);
+
     if (roomSnapshot.exists()) {
       await update(roomRef, {
-        "joinee": {
+        joinee: {
           name: name,
           userId: userId,
           isCompleted: false,
+          phase: "lobby",   // <- add phase field
           answers: [],
         }
       });
 
-      router.push(`/lobby/${roomId}?name=${encodeURIComponent(name)}&userId=${encodeURIComponent(userId)}`);
+      router.push(`/lobby/${roomId}`);
     } else {
       alert("Room not found.");
     }
@@ -148,4 +140,3 @@ export default function HomePage() {
     </div>
   );
 }
- 

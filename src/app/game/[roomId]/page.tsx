@@ -1,105 +1,122 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation"; // Use useParams for dynamic routing
+import { useParams, useRouter } from "next/navigation";
 import { onValue, ref, update } from "firebase/database";
 import { db } from "@/lib/firebase";
 
 export default function GamePage() {
   const { roomId } = useParams();
-  const [questions, setQuestions] = useState(["Question 1", "Question 2", "Question 3"]);
-  const [answers, setAnswers] = useState<string[]>(["", "", ""]);
-  const [isHost, setIsHost] = useState(false);
-  const [hasSubmitted, setHasSubmitted] = useState(false);  // Track if the user has already submitted
   const router = useRouter();
 
+  const [questions] = useState([
+    {
+      question: "What is the capital of France?",
+      options: ["Paris", "London", "Rome", "Berlin"],
+    },
+    {
+      question: "Which planet is known as the Red Planet?",
+      options: ["Earth", "Mars", "Venus", "Jupiter"],
+    },
+    {
+      question: "What is 2 + 2?",
+      options: ["3", "4", "5", "6"],
+    },
+  ]);
+
+  const [answers, setAnswers] = useState<string[]>(["", "", ""]);
+  const [isHost, setIsHost] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+
   useEffect(() => {
-    const storedId = localStorage.getItem("playerId"); // Get player ID from localStorage
-    if (!storedId) {
-      router.push("/"); // Redirect to homepage if no playerId found
+    const storedName = localStorage.getItem("playerName");
+    const storedId = localStorage.getItem("playerId");
+
+    if (!storedName || !storedId) {
+      router.push("/");
       return;
     }
 
-    // Fetch room data to check if the current user is the host
-    const roomRef = ref(db, `rooms/${roomId}`);
-    const unsubscribe = onValue(roomRef, (snapshot) => {
-      const roomData = snapshot.val();
-      if (roomData) {
-        setIsHost(roomData.host.userId === storedId);  // Set isHost based on storedId
-      }
-    });
+    if (roomId) {
+      const roomIdString = Array.isArray(roomId) ? roomId[0] : roomId;
+      const roomRef = ref(db, `rooms/${roomIdString}`);
 
-    // Cleanup listener on unmount
-    return () => unsubscribe();
-  }, [roomId, router]);
+      onValue(roomRef, (snapshot) => {
+        const roomData = snapshot.val();
+        if (roomData) {
+          const isHostPlayer = roomData.host?.userId === storedId;
+          setIsHost(isHostPlayer);
 
-  useEffect(() => {
-    if (!isHost) return;  // Only fetch player data if the user is the host
+          const playerPath = isHostPlayer ? "host" : "joinee";
+          const playerData = roomData[playerPath];
 
-    const roomRef = ref(db, `rooms/${roomId}`);
-    const unsubscribe = onValue(roomRef, (snapshot) => {
-      const roomData = snapshot.val();
-      if (roomData) {
-        const playerData = isHost ? roomData.host : roomData.joinee;
+          // If the phase is not "questions", redirect
+          
 
-        // Check if the player has already submitted answers
-        if (playerData?.isCompleted) {
-          setHasSubmitted(true);  // Set state if already submitted
+          // If player already answered, mark submitted
+          if (Array.isArray(playerData?.answers) && playerData.answers.length === questions.length) {
+            setHasSubmitted(true);
+          }
         }
-      }
-    });
+      });
+    }
+  }, [roomId, router, questions.length]);
 
-    // Cleanup listener on unmount
-    return () => unsubscribe();
-  }, [roomId, isHost]);
-
-  // Handle submit answers and mark the user as completed
   const handleSubmitAnswers = async () => {
     const storedId = localStorage.getItem("playerId");
-    if (storedId) {
-      // Determine the player path based on whether the user is the host or joinee
-      const playerPath = isHost ? "host" : "joinee"; // Set the correct path based on isHost
 
-      const roomRef = ref(db, `rooms/${roomId}`);
-      await update(roomRef, {
-        [`${playerPath}/answers`]: answers,
-        [`${playerPath}/isCompleted`]: true,  // Mark player as completed
-      });
-
-      setHasSubmitted(true); // Update the local state to reflect submission
-
-      // Redirect to waiting page
-      router.push(`/game/${roomId}/waiting`);
+    if (!storedId || !roomId) {
+      router.push("/");
+      return;
     }
+
+    const roomIdString = Array.isArray(roomId) ? roomId[0] : roomId;
+    const playerPath = isHost ? "host" : "joinee";
+
+    const updates: any = {};
+    updates[`rooms/${roomIdString}/${playerPath}/answers`] = answers;
+    updates[`rooms/${roomIdString}/${playerPath}/phase`] = "waiting"; // Move phase to "waiting" after answering
+
+    await update(ref(db), updates);
+
+    setHasSubmitted(true);
+    router.push(`/waiting/${roomIdString}`);
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
-      <h1 className="text-4xl font-bold mb-4">Game - Room {roomId}</h1>
+      <h1 className="text-4xl font-bold mb-6">Game - Room {roomId}</h1>
 
-      <div className="w-full max-w-md mb-4">
-        {questions.map((question, index) => (
-          <div key={index}>
-            <p>{question}</p>
-            <input
-              type="text"
-              value={answers[index]}
-              onChange={(e) => {
-                const newAnswers = [...answers];
-                newAnswers[index] = e.target.value;
-                setAnswers(newAnswers);
-              }}
-              className="w-full p-3 mb-4 border border-gray-300 rounded-lg"
-              disabled={hasSubmitted}  // Disable inputs if already submitted
-            />
+      <div className="w-full max-w-md">
+        {questions.map((q, index) => (
+          <div key={index} className="mb-6">
+            <p className="text-lg mb-3">{q.question}</p>
+            {q.options.map((option, optIdx) => (
+              <label key={optIdx} className="block mb-2">
+                <input
+                  type="radio"
+                  name={`question-${index}`}
+                  value={option}
+                  checked={answers[index] === option}
+                  onChange={() => {
+                    const newAnswers = [...answers];
+                    newAnswers[index] = option;
+                    setAnswers(newAnswers);
+                  }}
+                  disabled={hasSubmitted}
+                  className="mr-2"
+                />
+                {option}
+              </label>
+            ))}
           </div>
         ))}
       </div>
 
       <button
         onClick={handleSubmitAnswers}
-        className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all"
-        disabled={hasSubmitted}  // Disable the submit button if already submitted
+        className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all mt-4"
+        disabled={hasSubmitted}
       >
         {hasSubmitted ? "Submitted" : "Submit"}
       </button>
