@@ -39,7 +39,7 @@ export default function WaitingPage() {
         
           update(ref(db), updates)
             .then(() => {
-              router.push(`/evaluation/${roomIdString}/`);
+              router.push(`/game/${roomIdString}/evaluation/`);
             })
             .catch((error) => {
               console.error("Failed to update phases to evaluation:", error);

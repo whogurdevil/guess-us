@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import { get, ref, set, update } from "firebase/database";
 import { db } from "@/lib/firebase";
 
+import PrimaryInput from "./components/inputs/primary_input";
+import PrimaryButton from "./components/buttons/primary_button";
+import SecondaryButton from "./components/buttons/seconday_button";
+import PrimaryCard from "./components/cards/primary_card";
+
 function generateRoomCode() {
   return Math.random().toString(36).substring(2, 8);
 }
@@ -50,12 +55,12 @@ export default function HomePage() {
         name: name,
         userId: userId,
         isCompleted: false,
-        phase: "lobby",   // <- add phase field
+        phase: "lobby",
         answers: [],
       }
     });
 
-    router.push(`/lobby/${newRoomId}`);
+    router.push(`/game/${newRoomId}/lobby/`);
   };
 
   const handleJoinRoom = async () => {
@@ -76,67 +81,66 @@ export default function HomePage() {
           name: name,
           userId: userId,
           isCompleted: false,
-          phase: "lobby",   // <- add phase field
+          phase: "lobby",
           answers: [],
         }
       });
 
-      router.push(`/lobby/${roomId}`);
+      router.push(`/game/${roomId}/lobby/`);
     } else {
       alert("Room not found.");
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
-      <h1 className="text-4xl font-bold mb-4">Welcome to the Couples Game!</h1>
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 sm:p-6 transition-all">
+      <PrimaryCard>
+        <h1 className="text-3xl sm:text-5xl font-extrabold text-gray-800 mb-6 text-center drop-shadow-sm">
+          🎮 Guess Us!
+        </h1>
 
-      <div className="w-full max-w-md mb-4">
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Enter your name"
-          className="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
+        <div className="w-full max-w-md">
+          <div className="mb-4">
+            <PrimaryInput
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter your name"
+            />
+          </div>
 
-      <button
-        onClick={handleCreateRoom}
-        className="px-6 py-2 mb-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all"
-      >
-        Create Room
-      </button>
+          {joinRoom && (
+            <div className="mb-4">
+              <PrimaryInput
+                type="text"
+                value={roomId}
+                onChange={(e) => setRoomId(e.target.value)}
+                placeholder="Enter Room ID"
+              />
+            </div>
+          )}
 
-      <button
-        onClick={() => setJoinRoom(true)}
-        className="px-6 py-2 mb-4 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all"
-      >
-        Join Room
-      </button>
+          <div className="flex flex-col sm:flex-row items-center justify-center sm:space-x-4 space-y-4 sm:space-y-0 mt-4 text-center">
+            <PrimaryButton onClick={handleCreateRoom}>
+              Create Room
+            </PrimaryButton>
 
-      {joinRoom && (
-        <div className="mt-4 flex flex-col items-center">
-          <input
-            type="text"
-            value={roomId}
-            onChange={(e) => setRoomId(e.target.value)}
-            placeholder="Enter Room ID"
-            className="w-full p-3 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button
-            onClick={handleJoinRoom}
-            className="px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-all"
-          >
-            Join Room
-          </button>
+            <span className="text-gray-600 hidden sm:inline">or</span>
+
+            <SecondaryButton
+              onClick={() => {
+                if (!joinRoom) {
+                  setJoinRoom(true);
+                } else {
+                  handleJoinRoom();
+                }
+              }}
+            >
+              {joinRoom ? "Join Room" : "Enter Code"}
+            </SecondaryButton>
+          </div>
         </div>
-      )}
-
-      <div className="mt-4">
-        <p>Your Player ID: {userId}</p>
-        <p>Your Name: {name}</p>
-      </div>
+      </PrimaryCard>
     </div>
   );
 }

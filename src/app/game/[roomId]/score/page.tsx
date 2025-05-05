@@ -43,7 +43,7 @@ export default function ScorePage() {
       // 👉 Redirect joinee if host started a new game
       const currentPlayerPhase = isCurrentHost ? roomData.host?.phase : roomData.joinee?.phase;
       if (!isCurrentHost && currentPlayerPhase === "lobby") {
-        router.push(`/lobby/${roomIdString}`);
+        router.push(`/game/${roomIdString}/lobby/`);
       }
     });
   
@@ -63,7 +63,7 @@ export default function ScorePage() {
 
     update(ref(db), updates)
       .then(() => {
-        router.push(`/lobby/${roomIdString}`);
+        router.push(`/game/${roomIdString}/lobby/`);
       })
       .catch((error) => {
         console.error("Failed to reset game:", error);

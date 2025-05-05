@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { onValue, ref, update } from "firebase/database";
 import { db } from "@/lib/firebase";
+import QuestionViewer from "@/app/components/question_finder";
 
 export default function GamePage() {
   const { roomId } = useParams();
@@ -24,7 +25,10 @@ export default function GamePage() {
     },
   ]);
 
-  const [answers, setAnswers] = useState<string[]>(["", "", ""]);
+  const [answers, setAnswers] = useState<string[]>(
+    Array(questions.length).fill("0")
+  );
+
   const [isHost, setIsHost] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
@@ -50,11 +54,10 @@ export default function GamePage() {
           const playerPath = isHostPlayer ? "host" : "joinee";
           const playerData = roomData[playerPath];
 
-          // If the phase is not "questions", redirect
-          
-
-          // If player already answered, mark submitted
-          if (Array.isArray(playerData?.answers) && playerData.answers.length === questions.length) {
+          if (
+            Array.isArray(playerData?.answers) &&
+            playerData.answers.length === questions.length
+          ) {
             setHasSubmitted(true);
           }
         }
@@ -70,56 +73,34 @@ export default function GamePage() {
       return;
     }
 
+    alert("test")
+
     const roomIdString = Array.isArray(roomId) ? roomId[0] : roomId;
     const playerPath = isHost ? "host" : "joinee";
 
     const updates: any = {};
     updates[`rooms/${roomIdString}/${playerPath}/answers`] = answers;
-    updates[`rooms/${roomIdString}/${playerPath}/phase`] = "waiting"; // Move phase to "waiting" after answering
+    updates[`rooms/${roomIdString}/${playerPath}/phase`] = "waiting";
 
-    await update(ref(db), updates);
+    // await update(ref(db), updates);
 
-    setHasSubmitted(true);
-    router.push(`/waiting/${roomIdString}`);
+    // setHasSubmitted(true);
+    // router.push(`/game/${roomIdString}/waiting/`);
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
-      <h1 className="text-4xl font-bold mb-6">Game - Room {roomId}</h1>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-transparent p-6">
+      <h1 className="text-4xl font-bold mb-6 text-white">Game - Room {roomId}</h1>
 
-      <div className="w-full max-w-md">
-        {questions.map((q, index) => (
-          <div key={index} className="mb-6">
-            <p className="text-lg mb-3">{q.question}</p>
-            {q.options.map((option, optIdx) => (
-              <label key={optIdx} className="block mb-2">
-                <input
-                  type="radio"
-                  name={`question-${index}`}
-                  value={option}
-                  checked={answers[index] === option}
-                  onChange={() => {
-                    const newAnswers = [...answers];
-                    newAnswers[index] = option;
-                    setAnswers(newAnswers);
-                  }}
-                  disabled={hasSubmitted}
-                  className="mr-2"
-                />
-                {option}
-              </label>
-            ))}
-          </div>
-        ))}
+      <div className="w-full max-w-md bg-black rounded-xl p-6 shadow-lg">
+        <QuestionViewer
+          questions={questions}
+          answers={answers}
+          setAnswers={setAnswers}
+          hasSubmitted={hasSubmitted}
+          onComplete={handleSubmitAnswers}
+        />
       </div>
-
-      <button
-        onClick={handleSubmitAnswers}
-        className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all mt-4"
-        disabled={hasSubmitted}
-      >
-        {hasSubmitted ? "Submitted" : "Submit"}
-      </button>
     </div>
   );
 }

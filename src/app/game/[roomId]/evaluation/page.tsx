@@ -89,7 +89,7 @@ export default function EvaluationPage() {
     update(ref(db), updates)
       .then(
         ()=>{
-          router.push(`/score/${roomId}`)
+          router.push(`/game/${roomId}/score/`)
         }
       )
       .catch((error) => {
@@ -113,7 +113,7 @@ export default function EvaluationPage() {
   
     update(ref(db), updates)
       .then(() => {
-        router.push(`/lobby/${roomIdString}`);
+        router.push(`/game/${roomIdString}/lobby/`);
       })
       .catch((error) => {
         console.error("Failed to reset game:", error);
