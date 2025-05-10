@@ -1,21 +1,50 @@
 "use client"
+
 import React from 'react';
 import styled from 'styled-components';
 
-const PrimaryButton = ({ onClick, children = "Button", disabled }) => {
+const variantGradients: Record<string, string> = {
+    sunset: 'linear-gradient(45deg, #ff6a00, #ffb347)',        // vibrant orange to peach
+    ocean: 'linear-gradient(45deg, #00c6ff, #0072ff)',         // bright cyan to electric blue
+    forest: 'linear-gradient(45deg, #58BF66, #8cc63f)',        // bright green to fresh lime
+    royal: 'linear-gradient(45deg, #ff66b2, #ff3385)',          // soft pink to deeper pink
+  };
+  
+  
+  
+  
+  
+
+const RandomColorButton = ({
+  onClick,
+  children = "Button",
+  variant = "sunset",
+  disabled = false,
+}: {
+  onClick: () => void;
+  children?: React.ReactNode;
+  variant?: keyof typeof variantGradients;
+  disabled?: boolean;
+}) => {
+  const gradient = variantGradients[variant] || variantGradients.sunset;
+
   return (
     <StyledWrapper>
       <button onClick={onClick} disabled={disabled}>
-        <span className="button_top">{children}</span>
+        <span className="button_top" style={{ background: gradient }}>
+          {children}
+        </span>
       </button>
     </StyledWrapper>
   );
 };
 
 const StyledWrapper = styled.div`
+  width: 100%;
+  
   button {
+    width: 100%;
     --button_radius: 0.75em;
-    --button_color: #e8e8e8;
     --button_outline_color: #000000;
     font-size: 17px;
     font-weight: bold;
@@ -25,7 +54,8 @@ const StyledWrapper = styled.div`
   }
 
   .button_top {
-    display: inline-block;
+    display: block;
+    width: 100%;
     box-sizing: border-box;
     border: 2px solid var(--button_outline_color);
     border-radius: var(--button_radius);
@@ -34,7 +64,7 @@ const StyledWrapper = styled.div`
     white-space: nowrap;
     transform: translate(-0.2em, -0.2em);
     transition: transform 0.1s ease;
-    background: linear-gradient(45deg, #FF5F6D, #FFC371);
+    text-align: center;
   }
 
   button:hover .button_top {
@@ -55,4 +85,4 @@ const StyledWrapper = styled.div`
   }
 `;
 
-export default PrimaryButton;
+export default RandomColorButton;

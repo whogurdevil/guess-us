@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ref, onValue, update } from "firebase/database";
 import { db } from "@/lib/firebase";
+import SecondaryCard from "@/app/components/cards/secondary_card";
 
 export default function WaitingPage() {
   const router = useRouter();
@@ -53,14 +54,14 @@ export default function WaitingPage() {
   }, [roomId, router]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
+    <div className="min-h-full flex justify-center p-6">
+      <SecondaryCard className="w-90 max-w-md text-center p-6 rounded-2xl shadow-lg sm:w-screen">
       <h1 className="text-4xl font-bold mb-4">Waiting for Players in Room {roomId}</h1>
 
-      {hostWaiting || joineeWaiting ? (
-        <p className="text-xl">Waiting for the other player to complete...</p>
-      ) : (
-        <p className="text-xl">Both players completed! Redirecting...</p>
-      )}
+      
+        <p className="text-xl py-6">Waiting for the other player to complete...</p>
+      
+      </SecondaryCard>
     </div>
   );
 }

@@ -54,7 +54,6 @@ export default function HomePage() {
       host: {
         name: name,
         userId: userId,
-        isCompleted: false,
         phase: "lobby",
         answers: [],
       }
@@ -80,7 +79,6 @@ export default function HomePage() {
         joinee: {
           name: name,
           userId: userId,
-          isCompleted: false,
           phase: "lobby",
           answers: [],
         }

@@ -49,7 +49,7 @@ export default function Sidebar() {
     <aside className="flex flex-col w-full lg:w-80 text-white p-6 rounded-lg">
       {/* Room Code */}
       <SecondaryCard className="mb-6">
-        <p className="text-lg text-black text-center font-semibold">
+        <p className="text-lg text-black text-center font-semibold p-2">
           Room Code: {roomIdString}
         </p>
       </SecondaryCard>

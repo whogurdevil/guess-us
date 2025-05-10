@@ -20,15 +20,12 @@ export default function GamePage() {
       options: ["Earth", "Mars", "Venus", "Jupiter"],
     },
     {
-      question: "What is 2 + 2?",
+      question: "What is 2 + 2 dfads dfdsf dsfsdf fdsfad dfdf dfdfa  fdf adff df?",
       options: ["3", "4", "5", "6"],
     },
   ]);
 
-  const [answers, setAnswers] = useState<string[]>(
-    Array(questions.length).fill("0")
-  );
-
+  const [answers, setAnswers] = useState<string[]>(Array(questions.length).fill("0"));
   const [isHost, setIsHost] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
@@ -54,10 +51,7 @@ export default function GamePage() {
           const playerPath = isHostPlayer ? "host" : "joinee";
           const playerData = roomData[playerPath];
 
-          if (
-            Array.isArray(playerData?.answers) &&
-            playerData.answers.length === questions.length
-          ) {
+          if (Array.isArray(playerData?.answers) && playerData.answers.length === questions.length) {
             setHasSubmitted(true);
           }
         }
@@ -73,8 +67,7 @@ export default function GamePage() {
       return;
     }
 
-    alert("test")
-
+    // Example logic for handling the submit
     const roomIdString = Array.isArray(roomId) ? roomId[0] : roomId;
     const playerPath = isHost ? "host" : "joinee";
 
@@ -82,17 +75,16 @@ export default function GamePage() {
     updates[`rooms/${roomIdString}/${playerPath}/answers`] = answers;
     updates[`rooms/${roomIdString}/${playerPath}/phase`] = "waiting";
 
-    // await update(ref(db), updates);
+    await update(ref(db), updates);
 
-    // setHasSubmitted(true);
-    // router.push(`/game/${roomIdString}/waiting/`);
+    setHasSubmitted(true);
+    router.push(`/game/${roomIdString}/waiting/`);
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-transparent p-6">
-      <h1 className="text-4xl font-bold mb-6 text-white">Game - Room {roomId}</h1>
-
-      <div className="w-full max-w-md bg-black rounded-xl p-6 shadow-lg">
+    <div className="flex flex-col items-center justify-center bg-transparent p-6">
+      {/* Add margin-top to create space between game room info and question viewer */}
+      <div className="w-full max-w-md shadow-lg">
         <QuestionViewer
           questions={questions}
           answers={answers}

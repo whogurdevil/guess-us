@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ref, onValue, update } from "firebase/database";
 import { db } from "@/lib/firebase";
+import SecondaryButton from "@/app/components/buttons/seconday_button";
+import SecondaryCard from "@/app/components/cards/secondary_card";
+import PrimaryButton from "@/app/components/buttons/primary_button";
 
 export default function ScorePage() {
   const { roomId } = useParams();
@@ -71,25 +74,21 @@ export default function ScorePage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-yellow-100 p-6">
+    <div className="flex flex-col items-center min-h-full p-6">
+      <SecondaryCard className="w-90 max-w-md text-center p-6 rounded-2xl shadow-lg sm:w-screen">
+      
       <h1 className="text-4xl font-bold mb-4">Final Score</h1>
-      <p className="text-2xl mb-2">You scored: {score} / {totalQuestions}</p>
-
-      <button
-        className="mt-4 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all"
-        onClick={() => router.push("/")}
-      >
-        Go to Home
-      </button>
+      <p className="text-2xl mb-2 py-5">You scored: {score} / {totalQuestions}</p>
 
       {isHost && joineePhase === "score" && (
-        <button
-          className="mt-4 px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all"
+        <PrimaryButton
           onClick={handlePlayAgain}
+          disabled={false}
         >
           Play Again
-        </button>
+        </PrimaryButton>
       )}
+      </SecondaryCard>
     </div>
   );
 }

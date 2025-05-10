@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import RandomColorButton from "./buttons/random_color_button";
+import CircularProgress from "./loading/circular_progress";
+import SecondaryCard from "./cards/secondary_card";
 
 export default function QuestionViewer({
   questions,
@@ -16,7 +19,9 @@ export default function QuestionViewer({
   onComplete: () => void;
 }) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [timer, setTimer] = useState(10);
+  const [timer, setTimer] = useState(15);
+
+  const colorVariants = ["sunset", "ocean", "forest", "royal"];
 
   useEffect(() => {
     if (currentIndex >= questions.length) return;
@@ -24,8 +29,8 @@ export default function QuestionViewer({
     const interval = setInterval(() => {
       setTimer((prev) => {
         if (prev === 1) {
-          handleNext(); // go to next if time's up
-          return 10;
+          handleNext();
+          return 15;
         }
         return prev - 1;
       });
@@ -37,7 +42,7 @@ export default function QuestionViewer({
   const handleNext = () => {
     if (currentIndex < questions.length - 1) {
       setCurrentIndex((prev) => prev + 1);
-      setTimer(10);
+      setTimer(15);
     } else {
       onComplete();
     }
@@ -47,30 +52,37 @@ export default function QuestionViewer({
     const updatedAnswers = [...answers];
     updatedAnswers[currentIndex] = option;
     setAnswers(updatedAnswers);
-    handleNext(); // immediately go to next question
+    handleNext();
   };
 
   const currentQuestion = questions[currentIndex];
 
   return (
-    <div>
-      <p className="text-white mb-2">Time left: {timer}s</p>
-      <p className="text-lg mb-4 text-white font-semibold">
+    <SecondaryCard className="p-8">
+      {/* Timer Centered */}
+      <div className="flex justify-center mb-6">
+      <CircularProgress time={timer} size={70} />
+
+      </div>
+
+      {/* Question */}
+      <p className="text-lg font-semibold text-center mb-6">
         {currentQuestion.question}
       </p>
 
+      {/* Options */}
       <div className="grid gap-3">
         {currentQuestion.options.map((option, idx) => (
-          <button
+          <RandomColorButton
             key={idx}
-            className="w-full px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all disabled:opacity-50"
             onClick={() => handleAnswer(option)}
             disabled={hasSubmitted}
+            variant={colorVariants[idx % colorVariants.length]}
           >
             {option}
-          </button>
+          </RandomColorButton>
         ))}
       </div>
-    </div>
+    </SecondaryCard>
   );
 }
