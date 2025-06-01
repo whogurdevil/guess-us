@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🎯 Guess US
 
-## Getting Started
+> A fast-paced **1v1 real-time quiz game** for couples, friends, and siblings!
 
-First, run the development server:
+![Screenshot 1](./1.png)
+![Screenshot 2](./2.png)
+![Screenshot 3](./3.png)
+![Screenshot 4](./4.png)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- 🎮 Real-time 1v1 quiz battles
+- ❤️ Designed for couples, friends & siblings
+- 💡 Custom categories & random questions
+- 🔥 Smooth and interactive gameplay
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 📌 Todo
 
-To learn more about Next.js, take a look at the following resources:
+- [ ] Get random questions from a question bank or API
+- [ ] Add categories: `Couple`, `Sibling`, `Friend`
+- [ ] Improve matchmaking and animations
+- [ ] Add support for custom questions
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🛠️ Tech Stack
 
-## Deploy on Vercel
+- **Next.js** + **Firebase** for real-time gameplay
+- **Tailwind CSS** for styling
+- **Vercel** for deployment
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🤝 Contributing
+
+Pull requests are welcome! If you have ideas for categories or game features, feel free to fork and create a PR.
+
+---
+
+## 📷 Screenshots
+
+<p float="left">
+  <img src="./1.png" width="45%" />
+  <img src="./2.png" width="45%" />
+</p>
+<p float="left">
+  <img src="./3.png" width="45%" />
+  <img src="./4.png" width="45%" />
+</p>
+
+---
+
+## 🧠 Inspiration
+
+Built to help people bond, compete, and learn about each other — one question at a time.
+
+---
+
