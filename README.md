@@ -2,10 +2,10 @@
 
 > A fast-paced **1v1 real-time quiz game** for couples, friends, and siblings!
 
-![Screenshot 1](./1.png)
-![Screenshot 2](./2.png)
-![Screenshot 3](./3.png)
-![Screenshot 4](./4.png)
+![Screenshot 1](./readme_resources/1.png)
+![Screenshot 2](./readme_resources/2.png)
+![Screenshot 3](./readme_resources/3.png)
+![Screenshot 4](./readme_resources/4.png)
 
 ---
 
