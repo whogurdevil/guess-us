@@ -9,6 +9,7 @@ import PrimaryInput from "./components/inputs/primary_input";
 import PrimaryButton from "./components/buttons/primary_button";
 import SecondaryButton from "./components/buttons/seconday_button";
 import PrimaryCard from "./components/cards/primary_card";
+import { questions } from "./data/questions";
 
 function generateRoomCode() {
   return Math.random().toString(36).substring(2, 8);
@@ -55,6 +56,7 @@ export default function HomePage() {
         name: name,
         userId: userId,
         phase: "lobby",
+        questions: [],
         answers: [],
       }
     });

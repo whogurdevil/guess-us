@@ -1,44 +1,30 @@
-import { ref, get, set } from "firebase/database";
-import { db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { firestore } from "./firebase"; // Import your Firestore instance
 
-interface Question {
-  id: string;
+type Question = {
   question: string;
   options: string[];
-  answer: string;
-}
-
-const getUniqueQuestions = async (
-  hostId: string,
-  totalNumber: number
-): Promise<Question[]> => {
-  const allQuestionsRes = await fetch("/questions.json");
-  const allQuestions: Question[] = await allQuestionsRes.json();
-
-  const usedRef = ref(db, `usedQuestions/${hostId}`);
-  const usedSnapshot = await get(usedRef);
-  const usedIds: string[] = usedSnapshot.exists() ? usedSnapshot.val() : [];
-
-  const unusedQuestions = allQuestions.filter(q => !usedIds.includes(q.id));
-
-  if (unusedQuestions.length < totalNumber) {
-    console.warn("Not enough unique questions left. Recycling pool.");
-    await set(usedRef, []); // Reset used list
-    return getUniqueQuestions(hostId, totalNumber); // Retry with fresh pool
-  }
-
-  const selectedQuestions: Question[] = [];
-
-  while (selectedQuestions.length < totalNumber) {
-    const randomIndex = Math.floor(Math.random() * unusedQuestions.length);
-    const selected = unusedQuestions.splice(randomIndex, 1)[0];
-    selectedQuestions.push(selected);
-  }
-
-  const newUsedIds = [...usedIds, ...selectedQuestions.map(q => q.id)];
-  await set(usedRef, newUsedIds);
-
-  return selectedQuestions;
 };
 
-export default getUniqueQuestions;
+function getRandomSubset<T>(array: T[], count: number): T[] {
+  const shuffled = [...array].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, count);
+}
+
+export async function getRandomQuestions(category: string): Promise<Question[]> {
+  try {
+    const docRef = doc(firestore, "categories", category);
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+      throw new Error(`No questions found for category: ${category}`);
+    }
+
+    const questions: Question[] = docSnap.data().questions;
+
+    return getRandomSubset(questions, 10);
+  } catch (error) {
+    console.error("Error fetching questions:", error);
+    return [];
+  }
+}

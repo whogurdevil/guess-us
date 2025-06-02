@@ -10,22 +10,13 @@ export default function GamePage() {
   const { roomId } = useParams();
   const router = useRouter();
 
-  const [questions] = useState([
-    {
-      question: "What is the capital of France?",
-      options: ["Paris", "London", "Rome", "Berlin"],
-    },
-    {
-      question: "Which planet is known as the Red Planet?",
-      options: ["Earth", "Mars", "Venus", "Jupiter"],
-    },
-    {
-      question: "What is 2 + 2 dfads dfdsf dsfsdf fdsfad dfdf dfdfa  fdf adff df?",
-      options: ["3", "4", "5", "6"],
-    },
-  ]);
+  // Start with empty questions, will fetch from DB
+  const [questions, setQuestions] = useState<
+    { question: string; options: string[] }[]
+  >([]);
 
-  const [answers, setAnswers] = useState<string[]>(Array(questions.length).fill("0"));
+  // answers array should match questions length
+  const [answers, setAnswers] = useState<string[]>([]);
   const [isHost, setIsHost] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
@@ -45,19 +36,32 @@ export default function GamePage() {
       onValue(roomRef, (snapshot) => {
         const roomData = snapshot.val();
         if (roomData) {
+          // Set host status
           const isHostPlayer = roomData.host?.userId === storedId;
           setIsHost(isHostPlayer);
 
+          // Set questions fetched from DB
+          if (Array.isArray(roomData.questions)) {
+            setQuestions(roomData.questions);
+
+            // Initialize answers array once questions are fetched
+            setAnswers(Array(roomData.questions.length).fill("0"));
+          }
+
+          // Check if answers already submitted
           const playerPath = isHostPlayer ? "host" : "joinee";
           const playerData = roomData[playerPath];
 
-          if (Array.isArray(playerData?.answers) && playerData.answers.length === questions.length) {
+          if (
+            Array.isArray(playerData?.answers) &&
+            playerData.answers.length === (roomData.questions?.length || 0)
+          ) {
             setHasSubmitted(true);
           }
         }
       });
     }
-  }, [roomId, router, questions.length]);
+  }, [roomId, router]);
 
   const handleSubmitAnswers = async () => {
     const storedId = localStorage.getItem("playerId");
@@ -67,7 +71,6 @@ export default function GamePage() {
       return;
     }
 
-    // Example logic for handling the submit
     const roomIdString = Array.isArray(roomId) ? roomId[0] : roomId;
     const playerPath = isHost ? "host" : "joinee";
 
@@ -81,9 +84,17 @@ export default function GamePage() {
     router.push(`/game/${roomIdString}/waiting/`);
   };
 
+  // Render only if questions are loaded
+  if (questions.length === 0) {
+    return (
+      <div className="flex justify-center items-center h-40 text-gray-500">
+        Loading questions...
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col items-center justify-center bg-transparent p-6">
-      {/* Add margin-top to create space between game room info and question viewer */}
       <div className="w-full max-w-md shadow-lg">
         <QuestionViewer
           questions={questions}

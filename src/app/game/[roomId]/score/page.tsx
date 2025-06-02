@@ -62,6 +62,7 @@ export default function ScorePage() {
       [`rooms/${roomIdString}/joinee/answers`]: [],
       [`rooms/${roomIdString}/host/phase`]: "lobby",
       [`rooms/${roomIdString}/joinee/phase`]: "lobby",
+      [`rooms/${roomIdString}/questions`]: [],
       };
 
     update(ref(db), updates)

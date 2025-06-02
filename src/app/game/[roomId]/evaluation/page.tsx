@@ -10,23 +10,9 @@ export default function EvaluationPage() {
   const { roomId } = useParams();
   const router = useRouter();
 
-  const [questions, setQuestions] = useState([
-    {
-      question: "What is the capital of France?",
-      options: ["Paris", "London", "Rome", "Berlin"],
-    },
-    {
-      question: "Which planet is known as the Red Planet?",
-      options: ["Earth", "Mars", "Venus", "Jupiter"],
-    },
-    {
-      question: "What is 2 + 2?",
-      options: ["3", "4", "5", "6"],
-    },
-  ]);
-
+  const [questions, setQuestions] = useState<{ question: string; options: string[] }[]>([]);
   const [otherPlayerAnswers, setOtherPlayerAnswers] = useState<string[]>([]);
-  const [currentAnswers, setCurrentAnswers] = useState<string[]>(["", "", ""]);
+  const [currentAnswers, setCurrentAnswers] = useState<string[]>([]);
   const [score, setScore] = useState<number | null>(null);
   const [isHost, setIsHost] = useState<boolean>(false);
   const [joineePhase, setJoineePhase] = useState<string | null>(null);
@@ -40,11 +26,18 @@ export default function EvaluationPage() {
 
       if (roomData) {
         const storedId = localStorage.getItem("playerId");
-        const hostId = roomData.host.userId;
+        const hostId = roomData.host?.userId;
         const youAreHost = hostId === storedId;
         setIsHost(youAreHost);
 
-        const answersToFetch = youAreHost ? roomData.joinee.answers : roomData.host.answers;
+        // Fetch questions dynamically
+        if (Array.isArray(roomData.questions)) {
+          setQuestions(roomData.questions);
+          setCurrentAnswers(Array(roomData.questions.length).fill(""));
+        }
+
+        // Fetch other player answers
+        const answersToFetch = youAreHost ? roomData.joinee?.answers : roomData.host?.answers;
         setOtherPlayerAnswers(answersToFetch || []);
       }
     });
@@ -82,29 +75,24 @@ export default function EvaluationPage() {
     setScore(calculatedScore);
     const roomIdString = Array.isArray(roomId) ? roomId[0] : roomId;
 
-    // Update phase to 'score' in Firebase
     const updates: any = {
       [`rooms/${roomIdString}/${isHost ? "host" : "joinee"}/phase`]: "score",
     };
 
     update(ref(db), updates)
-      .then(
-        () => {
-          router.push(`/game/${roomId}/score/`)
-        }
-      )
+      .then(() => {
+        router.push(`/game/${roomId}/score/`);
+      })
       .catch((error) => {
         console.error("Failed to update phase:", error);
       });
   };
-
 
   const handlePlayAgain = () => {
     if (!roomId || !isHost) return;
 
     const roomIdString = Array.isArray(roomId) ? roomId[0] : roomId;
 
-    // Reset both host and joinee data
     const updates: any = {
       [`rooms/${roomIdString}/host/phase`]: "lobby",
       [`rooms/${roomIdString}/joinee/phase`]: "lobby",
@@ -121,8 +109,13 @@ export default function EvaluationPage() {
       });
   };
 
-
-  
+  if (questions.length === 0) {
+    return (
+      <div className="flex justify-center items-center h-40 text-gray-500">
+        Loading questions...
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">

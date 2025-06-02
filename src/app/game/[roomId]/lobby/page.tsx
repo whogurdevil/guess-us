@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ref, onValue, update } from "firebase/database";
 import { db } from "@/lib/firebase";
+import { getRandomQuestions } from "@/lib/getUniqueQuestions"; // Make sure this exists
 import PrimaryCard from "@/app/components/cards/primary_card";
 import PrimaryButton from "@/app/components/buttons/primary_button";
 import SecondaryCard from "@/app/components/cards/secondary_card";
-import LoadingLoop from "@/app/components/loading/loading-loop";
 
 export default function LobbyPage() {
   const { roomId } = useParams();
@@ -15,7 +15,8 @@ export default function LobbyPage() {
   const [hostName, setHostName] = useState("");
   const [joineeName, setJoineeName] = useState("");
   const [isHost, setIsHost] = useState(false);
-  const [dots, setDots] = useState(""); // For managing the animated dots
+  const [dots, setDots] = useState("");
+  const [category, setCategory] = useState("friends"); // NEW
   const router = useRouter();
 
   useEffect(() => {
@@ -30,18 +31,11 @@ export default function LobbyPage() {
     }
   }, [roomId]);
 
-  // Handle the animation of dots (waiting effect)
   useEffect(() => {
     const interval = setInterval(() => {
-      setDots((prev) => {
-        if (prev.length === 3) {
-          return ""; // Reset after 3 dots
-        }
-        return prev + ".";
-      });
+      setDots((prev) => (prev.length === 3 ? "" : prev + "."));
     }, 500);
-
-    return () => clearInterval(interval); // Cleanup interval when component unmounts
+    return () => clearInterval(interval);
   }, []);
 
   const fetchRoomData = (roomId: string) => {
@@ -51,7 +45,6 @@ export default function LobbyPage() {
       if (data) {
         setHostName(data.host?.name || "Host");
         setJoineeName(data.joinee?.name || "Waiting for Joinee...");
-
         const storedId = localStorage.getItem("playerId");
         const isCurrentHost = data.host?.userId === storedId;
         setIsHost(isCurrentHost);
@@ -59,32 +52,33 @@ export default function LobbyPage() {
         const currentUser = isCurrentHost ? data.host : data.joinee;
         const phase = currentUser?.phase || "lobby";
 
-        // 🚀 Redirect based on current user's phase
         if (phase === "questions") {
           router.push(`/game/${roomId}`);
         }
-        // else stay on lobby
       }
     });
   };
 
-  const handleStartGame = () => {
+  const handleStartGame = async () => {
     if (!roomId) return;
 
     const roomIdString = Array.isArray(roomId) ? roomId[0] : roomId;
 
-    // Update both host and joinee phase to "questions"
-    const updates: any = {};
-    updates[`rooms/${roomIdString}/host/phase`] = "questions";
-    updates[`rooms/${roomIdString}/joinee/phase`] = "questions";
+    try {
+      const questions = await getRandomQuestions(category);
+      console.log(questions)
 
-    update(ref(db), updates)
-      .then(() => {
-        router.push(`/game/${roomIdString}`);
-      })
-      .catch((error) => {
-        console.error("Failed to start game:", error);
-      });
+      const updates: any = {
+        [`rooms/${roomIdString}/host/phase`]: "questions",
+        [`rooms/${roomIdString}/joinee/phase`]: "questions",
+        [`rooms/${roomIdString}/questions`]: questions,
+      };
+
+      await update(ref(db), updates);
+      router.push(`/game/${roomIdString}`);
+    } catch (error) {
+      console.error("Error starting game:", error);
+    }
   };
 
   return (
@@ -109,25 +103,40 @@ export default function LobbyPage() {
         </div>
 
         {isHost && (
-          <div className="mt-8">
-            <PrimaryButton
-              onClick={handleStartGame}
-              disabled={joineeName === "Waiting for Joinee..."}
-            >
-              {joineeName === "Waiting for Joinee..." ? "Waiting for Joinee..." : "Start Game"}
-            </PrimaryButton>
-          </div>
+          <>
+            <div className="mt-6">
+              <label className="block text-sm font-medium text-gray-600 mb-1">
+                Select Category
+              </label>
+              <select
+                className="w-full p-2 border rounded-md"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+              >
+                <option value="friends">Friends</option>
+                <option value="couples">Couples</option>
+                <option value="siblings">Siblings</option>
+              </select>
+            </div>
+
+            <div className="mt-8">
+              <PrimaryButton
+                onClick={handleStartGame}
+                disabled={joineeName === "Waiting for Joinee..."}
+              >
+                {joineeName === "Waiting for Joinee..." ? "Waiting for Joinee..." : "Start Game"}
+              </PrimaryButton>
+            </div>
+          </>
         )}
 
-{!isHost && (
-  <div className="mt-8 flex justify-center items-center h-16">
-    <span className="italic text-gray-500">
-      Waiting for the host to start{dots}
-    </span>
-  </div>
-)}
-
-
+        {!isHost && (
+          <div className="mt-8 flex justify-center items-center h-16">
+            <span className="italic text-gray-500">
+              Waiting for the host to start{dots}
+            </span>
+          </div>
+        )}
       </SecondaryCard>
     </div>
   );
