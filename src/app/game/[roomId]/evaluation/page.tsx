@@ -118,7 +118,7 @@ export default function EvaluationPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
+    <div className="flex flex-col items-center justify-center min-h-screen p-6">
       <h1 className="text-4xl font-bold mb-6">Evaluation</h1>
 
       <div className="w-full max-w-md">
